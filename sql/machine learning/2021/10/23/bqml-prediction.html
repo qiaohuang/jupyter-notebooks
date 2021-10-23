@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Predict Visitor Purchases with a Classification Model in BQML | Qiao’s Jupyter Notebooks</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Predict Visitor Purchases with a Classification Model in BQML" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Use ecommerce dataset to run some typical queries and create classification models." />
+<meta property="og:description" content="Use ecommerce dataset to run some typical queries and create classification models." />
+<link rel="canonical" href="https://nb.uniqiao.com/sql/machine%20learning/2021/10/23/bqml-prediction.html" />
+<meta property="og:url" content="https://nb.uniqiao.com/sql/machine%20learning/2021/10/23/bqml-prediction.html" />
+<meta property="og:site_name" content="Qiao’s Jupyter Notebooks" />
+<meta property="og:image" content="https://nb.uniqiao.com/images/2021-10-23-bqml.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-10-23T00:00:00-05:00" />
+<script type="application/ld+json">
+{"datePublished":"2021-10-23T00:00:00-05:00","url":"https://nb.uniqiao.com/sql/machine%20learning/2021/10/23/bqml-prediction.html","@type":"BlogPosting","image":"https://nb.uniqiao.com/images/2021-10-23-bqml.png","headline":"Predict Visitor Purchases with a Classification Model in BQML","dateModified":"2021-10-23T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://nb.uniqiao.com/sql/machine%20learning/2021/10/23/bqml-prediction.html"},"description":"Use ecommerce dataset to run some typical queries and create classification models.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://nb.uniqiao.com/feed.xml" title="Qiao's Jupyter Notebooks" /><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Qiao&#39;s Jupyter Notebooks</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About Me</a><a class="page-link" href="/search/">Search</a><a class="page-link" href="/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Predict Visitor Purchases with a Classification Model in BQML</h1><p class="page-description">Use ecommerce dataset to run some typical queries and create classification models.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-10-23T00:00:00-05:00" itemprop="datePublished">
+        Oct 23, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      13 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/categories/#SQL">SQL</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#Machine Learning">Machine Learning</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#overview">Overview</a></li>
+<li class="toc-entry toc-h2"><a href="#explore-ecommerce-data">Explore ecommerce data</a></li>
+<li class="toc-entry toc-h2"><a href="#identify-an-objective">Identify an objective</a></li>
+<li class="toc-entry toc-h2"><a href="#select-features-and-create-your-training-dataset">Select features and create your training dataset</a></li>
+<li class="toc-entry toc-h2"><a href="#select-a-bqml-model-type-and-specify-options">Select a BQML model type and specify options</a></li>
+<li class="toc-entry toc-h2"><a href="#evaluate-classification-model-performance">Evaluate classification model performance</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#select-your-performance-criteria">Select your performance criteria</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#improve-model-performance-with-feature-engineering">Improve model performance with Feature Engineering</a></li>
+<li class="toc-entry toc-h2"><a href="#results">Results</a></li>
+</ul><h2 id="overview">
+<a class="anchor" href="#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p><a href="https://cloud.google.com/bigquery/docs/bigqueryml-analyst-start">BigQuery Machine Learning</a> (BQML, product in beta) is a new feature in BigQuery where data analysts can create, train, evaluate, and predict with machine learning models with minimal coding.</p>
+
+<p>There is a newly available <a href="https://www.en.advertisercommunity.com/t5/Articles/Introducing-the-Google-Analytics-Sample-Dataset-for-BigQuery/ba-p/1676331#">ecommerce dataset</a> that has millions of Google Analytics records for the <a href="https://shop.googlemerchandisestore.com/">Google Merchandise Store</a> loaded into BigQuery. In this lab you will use this data to run some typical queries that businesses would want to know about their customers’ purchasing habits.</p>
+
+<h2 id="explore-ecommerce-data">
+<a class="anchor" href="#explore-ecommerce-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Explore ecommerce data</h2>
+
+<p><strong>Scenario:</strong> Your data analyst team exported the Google Analytics logs for an ecommerce website into BigQuery and created a new table of all the raw ecommerce visitor session data for you to explore. Using this data, you’ll try to answer a few questions.</p>
+
+<p><strong>Question:</strong> Out of the total visitors who visited our website, what % made a purchase?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span><span class="n">standardSQL</span>
+<span class="k">WITH</span> <span class="n">visitors</span> <span class="k">AS</span><span class="p">(</span>
+<span class="k">SELECT</span>
+<span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span> <span class="n">fullVisitorId</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_visitors</span>
+<span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+<span class="p">),</span>
+<span class="n">purchasers</span> <span class="k">AS</span><span class="p">(</span>
+<span class="k">SELECT</span>
+<span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span> <span class="n">fullVisitorId</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_purchasers</span>
+<span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+<span class="k">WHERE</span> <span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="k">IS</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+  <span class="n">total_visitors</span><span class="p">,</span>
+  <span class="n">total_purchasers</span><span class="p">,</span>
+  <span class="n">total_purchasers</span> <span class="o">/</span> <span class="n">total_visitors</span> <span class="k">AS</span> <span class="n">conversion_rate</span>
+<span class="k">FROM</span> <span class="n">visitors</span><span class="p">,</span> <span class="n">purchasers</span>
+</code></pre></div></div>
+
+<p>The result: 2.69%</p>
+
+<p><strong>Question:</strong> What are the top 5 selling products?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+  <span class="n">p</span><span class="p">.</span><span class="n">v2ProductName</span><span class="p">,</span>
+  <span class="n">p</span><span class="p">.</span><span class="n">v2ProductCategory</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">productQuantity</span><span class="p">)</span> <span class="k">AS</span> <span class="n">units_sold</span><span class="p">,</span>
+  <span class="n">ROUND</span><span class="p">(</span><span class="k">SUM</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">localProductRevenue</span><span class="o">/</span><span class="mi">1000000</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span> <span class="k">AS</span> <span class="n">revenue</span>
+<span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span><span class="p">,</span>
+<span class="k">UNNEST</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="k">AS</span> <span class="n">h</span><span class="p">,</span>
+<span class="k">UNNEST</span><span class="p">(</span><span class="n">h</span><span class="p">.</span><span class="n">product</span><span class="p">)</span> <span class="k">AS</span> <span class="n">p</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">revenue</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">5</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>The result:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Row</strong></th>
+      <th><strong>v2ProductName</strong></th>
+      <th><strong>v2ProductCategory</strong></th>
+      <th><strong>units_sold</strong></th>
+      <th><strong>revenue</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Nest® Learning Thermostat 3rd Gen-USA - Stainless Steel</td>
+      <td>Nest-USA</td>
+      <td>17651</td>
+      <td>870976.95</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Nest® Cam Outdoor Security Camera - USA</td>
+      <td>Nest-USA</td>
+      <td>16930</td>
+      <td>684034.55</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Nest® Cam Indoor Security Camera - USA</td>
+      <td>Nest-USA</td>
+      <td>14155</td>
+      <td>548104.47</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Nest® Protect Smoke + CO White Wired Alarm-USA</td>
+      <td>Nest-USA</td>
+      <td>6394</td>
+      <td>178937.6</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Nest® Protect Smoke + CO White Battery Alarm-USA</td>
+      <td>Nest-USA</td>
+      <td>6340</td>
+      <td>178572.4</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Question:</strong> How many visitors bought on subsequent visits to the website?</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span> <span class="n">visitors</span> <span class="n">who</span> <span class="n">bought</span> <span class="k">on</span> <span class="n">a</span> <span class="k">return</span> <span class="n">visit</span> <span class="p">(</span><span class="n">could</span> <span class="n">have</span> <span class="n">bought</span> <span class="k">on</span> <span class="k">first</span> <span class="k">as</span> <span class="n">well</span>
+<span class="k">WITH</span> <span class="n">all_visitor_stats</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span>
+  <span class="n">fullvisitorid</span><span class="p">,</span> <span class="o">#</span> <span class="mi">741</span><span class="p">,</span><span class="mi">721</span> <span class="k">unique</span> <span class="n">visitors</span>
+  <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span>
+<span class="p">)</span>
+<span class="k">SELECT</span>
+  <span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span> <span class="n">fullvisitorid</span><span class="p">)</span> <span class="k">AS</span> <span class="n">total_visitors</span><span class="p">,</span>
+  <span class="n">will_buy_on_return_visit</span>
+<span class="k">FROM</span> <span class="n">all_visitor_stats</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">will_buy_on_return_visit</span>
+</code></pre></div></div>
+
+<p>The results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Row</strong></th>
+      <th><strong>total_visitors</strong></th>
+      <th><strong>will_buy_on_return_visit</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>729848</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>11873</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Analyzing the results, you can see that (11873 / 741721) = 1.6% of total visitors will return and purchase from the website. This includes the subset of visitors who bought on their very first session and then came back and bought again.</p>
+
+<p><strong>Question:</strong> What are some of the reasons a typical ecommerce customer will browse but not buy until a later visit?</p>
+
+<p><strong>Answer:</strong> Although there is no one right answer, one popular reason is comparison shopping between different ecommerce sites before ultimately making a purchase decision. This is very common for luxury goods where significant up-front research and comparison is required by the customer before deciding (think car purchases) but also true to a lesser extent for the merchandise on this site (t-shirts, accessories, etc).</p>
+
+<p>In the world of online marketing, identifying and marketing to these future customers based on the characteristics of their first visit will increase conversion rates and reduce the outflow to competitor sites.</p>
+
+<h2 id="identify-an-objective">
+<a class="anchor" href="#identify-an-objective" aria-hidden="true"><span class="octicon octicon-link"></span></a>Identify an objective</h2>
+
+<p>Now you will create a Machine Learning model in BigQuery to predict whether or not a new user is likely to purchase in the future. Identifying these high-value users can help your marketing team to target them with special promotions and ad campaigns to ensure a conversion while they comparison shop between visits to your ecommerce site.</p>
+
+<h2 id="select-features-and-create-your-training-dataset">
+<a class="anchor" href="#select-features-and-create-your-training-dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>Select features and create your training dataset</h2>
+
+<p>Google Analytics captures a wide variety of dimensions and measures about a user’s visit on this ecommerce website. Browse the complete list of fields <a href="https://support.google.com/analytics/answer/3437719?hl=en">here</a> and then <a href="https://console.cloud.google.com/bigquery?project=&amp;p=data-to-insights&amp;d=ecommerce&amp;t=web_analytics&amp;page=table">preview the demo dataset</a> to find useful features that will help a machine learning model understand the relationship between data about a visitor’s first time on your website and whether they will return and make a purchase.</p>
+
+<p>Your team decides to test whether these two fields are good inputs for your classification model:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">totals.bounces</code> (whether the visitor left the website immediately)</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">totals.timeOnSite</code> (how long the visitor was on our website)</li>
+</ul>
+
+<p><strong>Question:</strong> What are the risks of only using the above two fields?</p>
+
+<p><strong>Answer:</strong> Machine learning is only as good as the training data that is fed into it. If there isn’t enough information for the model to determine and learn the relationship between your input features and your label (in this case, whether the visitor bought in the future) then you will not have an accurate model. While training a model on just these two fields is a start, you will see if they’re good enough to produce an accurate model.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+  <span class="o">*</span> <span class="k">EXCEPT</span><span class="p">(</span><span class="n">fullVisitorId</span><span class="p">)</span>
+<span class="k">FROM</span>
+  <span class="o">#</span> <span class="n">features</span>
+  <span class="p">(</span><span class="k">SELECT</span>
+    <span class="n">fullVisitorId</span><span class="p">,</span>
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">bounces</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">bounces</span><span class="p">,</span>
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">timeOnSite</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">time_on_site</span>
+  <span class="k">FROM</span>
+    <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">WHERE</span>
+    <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="k">JOIN</span>
+  <span class="p">(</span><span class="k">SELECT</span>
+    <span class="n">fullvisitorid</span><span class="p">,</span>
+    <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span>
+      <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span><span class="p">)</span>
+  <span class="k">USING</span> <span class="p">(</span><span class="n">fullVisitorId</span><span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">time_on_site</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">10</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Row</strong></th>
+      <th><strong>bounces</strong></th>
+      <th><strong>time_on_site</strong></th>
+      <th><strong>will_buy_on_return_visit</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>0</td>
+      <td>15047</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0</td>
+      <td>12136</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0</td>
+      <td>11201</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0</td>
+      <td>10046</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0</td>
+      <td>9974</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>0</td>
+      <td>9564</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>0</td>
+      <td>9520</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>0</td>
+      <td>9275</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>0</td>
+      <td>9138</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>0</td>
+      <td>8872</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Question:</strong> Which fields are the input features and the label?</p>
+
+<p><strong>Answer</strong> The inputs are <strong>bounces</strong> and <strong>time_on_site</strong>. The label is <strong>will_buy_on_return_visit</strong>.</p>
+
+<p><strong>Question:</strong> Which two fields are known after a visitor’s first session?</p>
+
+<p><strong>Answer:</strong> <strong>bounces</strong> and <strong>time_on_site</strong> are known after a visitor’s first session.</p>
+
+<p><strong>Question:</strong> Which field isn’t known until later in the future?</p>
+
+<p><strong>Answer:</strong> <strong>will_buy_on_return_visit</strong> is not known after the first visit. Again, you’re predicting for a subset of users who returned to your website and purchased. Since you don’t know the future at prediction time, you cannot say with certainty whether a new visitor come back and purchase. The value of building an ML model is to get the probability of future purchase based on the data gleaned about their first session.</p>
+
+<p><strong>Question:</strong> Looking at the initial data results, do you think <strong>time_on_site</strong> and <strong>bounces</strong> will be a good indicator of whether the user will return and purchase or not?</p>
+
+<p><strong>Answer:</strong> It’s often too early to tell before training and evaluating the model, but at first glance out of the top 10 <code class="language-plaintext highlighter-rouge">time_on_site</code>, only 1 customer returned to buy, which isn’t very promising. Let’s see how well the model does.</p>
+
+<h2 id="select-a-bqml-model-type-and-specify-options">
+<a class="anchor" href="#select-a-bqml-model-type-and-specify-options" aria-hidden="true"><span class="octicon octicon-link"></span></a>Select a BQML model type and specify options</h2>
+
+<p>Now that you have your initial features selected, you are now ready to create your first ML model in BigQuery.</p>
+
+<p>There are the two model types to choose from:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Model</strong></th>
+      <th><strong>Model Type</strong></th>
+      <th><strong>Label Data type</strong></th>
+      <th><strong>Example</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Forecasting</td>
+      <td>linear_reg</td>
+      <td>Numeric value (typically an integer or floating point)</td>
+      <td>Forecast sales figures for next year given historical sales data.</td>
+    </tr>
+    <tr>
+      <td>Classification</td>
+      <td>logistic_reg</td>
+      <td>0 or 1 for binary classification</td>
+      <td>Classify an email as spam or not spam given the context.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Which model type should you choose?</strong></p>
+
+<p>Since you are bucketing visitors into “will buy in future” or “won’t buy in future”, use <code class="language-plaintext highlighter-rouge">logistic_reg</code> in a classification model.</p>
+
+<p>The following query creates a model and specifies model options. Run this query to train your model:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="n">MODEL</span> <span class="nv">`ecommerce.classification_model`</span>
+<span class="k">OPTIONS</span>
+<span class="p">(</span>
+<span class="n">model_type</span><span class="o">=</span><span class="s1">'logistic_reg'</span><span class="p">,</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'will_buy_on_return_visit'</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="k">AS</span>
+<span class="o">#</span><span class="n">standardSQL</span>
+<span class="k">SELECT</span>
+  <span class="o">*</span> <span class="k">EXCEPT</span><span class="p">(</span><span class="n">fullVisitorId</span><span class="p">)</span>
+<span class="k">FROM</span>
+  <span class="o">#</span> <span class="n">features</span>
+  <span class="p">(</span><span class="k">SELECT</span>
+    <span class="n">fullVisitorId</span><span class="p">,</span>
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">bounces</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">bounces</span><span class="p">,</span>
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">timeOnSite</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">time_on_site</span>
+  <span class="k">FROM</span>
+    <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">WHERE</span>
+    <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="nb">date</span> <span class="k">BETWEEN</span> <span class="s1">'20160801'</span> <span class="k">AND</span> <span class="s1">'20170430'</span><span class="p">)</span> <span class="o">#</span> <span class="n">train</span> <span class="k">on</span> <span class="k">first</span> <span class="mi">9</span> <span class="n">months</span>
+  <span class="k">JOIN</span>
+  <span class="p">(</span><span class="k">SELECT</span>
+    <span class="n">fullvisitorid</span><span class="p">,</span>
+    <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span>
+      <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span><span class="p">)</span>
+  <span class="k">USING</span> <span class="p">(</span><span class="n">fullVisitorId</span><span class="p">)</span>
+<span class="p">;</span>
+</code></pre></div></div>
+
+<p>Next, you evaluate the performance of the model against new unseen evaluation data.</p>
+
+<h2 id="evaluate-classification-model-performance">
+<a class="anchor" href="#evaluate-classification-model-performance" aria-hidden="true"><span class="octicon octicon-link"></span></a>Evaluate classification model performance</h2>
+
+<h3 id="select-your-performance-criteria">
+<a class="anchor" href="#select-your-performance-criteria" aria-hidden="true"><span class="octicon octicon-link"></span></a>Select your performance criteria</h3>
+
+<p>For classification problems in ML, you want to minimize the False Positive Rate (predict that the user will return and purchase and they don’t) and maximize the True Positive Rate (predict that the user will return and purchase and they do).</p>
+
+<p>This relationship is visualized with a ROC (Receiver Operating Characteristic) curve like the one shown here, where you try to maximize the area under the curve or AUC:</p>
+
+<p><img src="https://cdn.qwiklabs.com/GNW5Bw%2B8bviep9OK201QGPzaAEnKKyoIkDChUHeVdFw%3D" alt="42fc12b6077e4784.png"></p>
+
+<p>In BQML, <strong>roc_auc</strong> is simply a queryable field when evaluating your trained ML model.</p>
+
+<p>Now that training is complete, run this query to evaluate how well the model performs using <code class="language-plaintext highlighter-rouge">ML.EVALUATE</code>:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+  <span class="n">roc_auc</span><span class="p">,</span>
+  <span class="k">CASE</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">9</span> <span class="k">THEN</span> <span class="s1">'good'</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">8</span> <span class="k">THEN</span> <span class="s1">'fair'</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">7</span> <span class="k">THEN</span> <span class="s1">'decent'</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">6</span> <span class="k">THEN</span> <span class="s1">'not great'</span>
+  <span class="k">ELSE</span> <span class="s1">'poor'</span> <span class="k">END</span> <span class="k">AS</span> <span class="n">model_quality</span>
+<span class="k">FROM</span>
+  <span class="n">ML</span><span class="p">.</span><span class="n">EVALUATE</span><span class="p">(</span><span class="n">MODEL</span> <span class="n">ecommerce</span><span class="p">.</span><span class="n">classification_model</span><span class="p">,</span>  <span class="p">(</span>
+<span class="k">SELECT</span>
+  <span class="o">*</span> <span class="k">EXCEPT</span><span class="p">(</span><span class="n">fullVisitorId</span><span class="p">)</span>
+<span class="k">FROM</span>
+  <span class="o">#</span> <span class="n">features</span>
+  <span class="p">(</span><span class="k">SELECT</span>
+    <span class="n">fullVisitorId</span><span class="p">,</span>
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">bounces</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">bounces</span><span class="p">,</span>
+    <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">timeOnSite</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">time_on_site</span>
+  <span class="k">FROM</span>
+    <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">WHERE</span>
+    <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="nb">date</span> <span class="k">BETWEEN</span> <span class="s1">'20170501'</span> <span class="k">AND</span> <span class="s1">'20170630'</span><span class="p">)</span> <span class="o">#</span> <span class="n">eval</span> <span class="k">on</span> <span class="mi">2</span> <span class="n">months</span>
+  <span class="k">JOIN</span>
+  <span class="p">(</span><span class="k">SELECT</span>
+    <span class="n">fullvisitorid</span><span class="p">,</span>
+    <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span>
+      <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span><span class="p">)</span>
+  <span class="k">USING</span> <span class="p">(</span><span class="n">fullVisitorId</span><span class="p">)</span>
+<span class="p">));</span>
+</code></pre></div></div>
+
+<p>You should see the following result:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Row</th>
+      <th>roc_auc</th>
+      <th>model_quality</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>0.7238561438561438</td>
+      <td>decent</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>After evaluating your model you get a <strong>roc_auc</strong> of 0.72, which shows the model has decent, but not great, predictive power. Since the goal is to get the area under the curve as close to 1.0 as possible, there is room for improvement.</p>
+
+<h2 id="improve-model-performance-with-feature-engineering">
+<a class="anchor" href="#improve-model-performance-with-feature-engineering" aria-hidden="true"><span class="octicon octicon-link"></span></a>Improve model performance with Feature Engineering</h2>
+
+<p>As was hinted at earlier, there are many more features in the dataset that may help the model better understand the relationship between a visitor’s first session and the likelihood that they will purchase on a subsequent visit.</p>
+
+<p>Add some new features and create a second machine learning model called <code class="language-plaintext highlighter-rouge">classification_model_2</code>:</p>
+
+<ul>
+  <li>How far the visitor got in the checkout process on their first visit</li>
+  <li>Where the visitor came from (traffic source: organic search, referring site etc..)</li>
+  <li>Device category (mobile, tablet, desktop)</li>
+  <li>Geographic information (country)</li>
+</ul>
+
+<p>Create this second model by clicking on <strong>COMPOSE NEW QUERY</strong>:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="n">MODEL</span> <span class="nv">`ecommerce.classification_model_2`</span>
+<span class="k">OPTIONS</span>
+  <span class="p">(</span><span class="n">model_type</span><span class="o">=</span><span class="s1">'logistic_reg'</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'will_buy_on_return_visit'</span><span class="p">])</span> <span class="k">AS</span>
+<span class="k">WITH</span> <span class="n">all_visitor_stats</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span>
+  <span class="n">fullvisitorid</span><span class="p">,</span>
+  <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span>
+<span class="p">)</span>
+<span class="o">#</span> <span class="k">add</span> <span class="k">in</span> <span class="k">new</span> <span class="n">features</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">EXCEPT</span><span class="p">(</span><span class="n">unique_session_id</span><span class="p">)</span> <span class="k">FROM</span> <span class="p">(</span>
+  <span class="k">SELECT</span>
+      <span class="n">CONCAT</span><span class="p">(</span><span class="n">fullvisitorid</span><span class="p">,</span> <span class="k">CAST</span><span class="p">(</span><span class="n">visitId</span> <span class="k">AS</span> <span class="n">STRING</span><span class="p">))</span> <span class="k">AS</span> <span class="n">unique_session_id</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">labels</span>
+      <span class="n">will_buy_on_return_visit</span><span class="p">,</span>
+      <span class="k">MAX</span><span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="n">h</span><span class="p">.</span><span class="n">eCommerceAction</span><span class="p">.</span><span class="n">action_type</span> <span class="k">AS</span> <span class="n">INT64</span><span class="p">))</span> <span class="k">AS</span> <span class="n">latest_ecommerce_progress</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">behavior</span> <span class="k">on</span> <span class="n">the</span> <span class="n">site</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">bounces</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">bounces</span><span class="p">,</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">timeOnSite</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">time_on_site</span><span class="p">,</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">pageviews</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">pageviews</span><span class="p">,</span>
+      <span class="o">#</span> <span class="k">where</span> <span class="n">the</span> <span class="n">visitor</span> <span class="n">came</span> <span class="k">from</span>
+      <span class="n">trafficSource</span><span class="p">.</span><span class="k">source</span><span class="p">,</span>
+      <span class="n">trafficSource</span><span class="p">.</span><span class="n">medium</span><span class="p">,</span>
+      <span class="n">channelGrouping</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">mobile</span> <span class="k">or</span> <span class="n">desktop</span>
+      <span class="n">device</span><span class="p">.</span><span class="n">deviceCategory</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">geographic</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">geoNetwork</span><span class="p">.</span><span class="n">country</span><span class="p">,</span> <span class="nv">""</span><span class="p">)</span> <span class="k">AS</span> <span class="n">country</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span><span class="p">,</span>
+     <span class="k">UNNEST</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="k">AS</span> <span class="n">h</span>
+    <span class="k">JOIN</span> <span class="n">all_visitor_stats</span> <span class="k">USING</span><span class="p">(</span><span class="n">fullvisitorid</span><span class="p">)</span>
+  <span class="k">WHERE</span> <span class="mi">1</span><span class="o">=</span><span class="mi">1</span>
+    <span class="o">#</span> <span class="k">only</span> <span class="n">predict</span> <span class="k">for</span> <span class="k">new</span> <span class="n">visits</span>
+    <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="nb">date</span> <span class="k">BETWEEN</span> <span class="s1">'20160801'</span> <span class="k">AND</span> <span class="s1">'20170430'</span> <span class="o">#</span> <span class="n">train</span> <span class="mi">9</span> <span class="n">months</span>
+  <span class="k">GROUP</span> <span class="k">BY</span>
+  <span class="n">unique_session_id</span><span class="p">,</span>
+  <span class="n">will_buy_on_return_visit</span><span class="p">,</span>
+  <span class="n">bounces</span><span class="p">,</span>
+  <span class="n">time_on_site</span><span class="p">,</span>
+  <span class="n">totals</span><span class="p">.</span><span class="n">pageviews</span><span class="p">,</span>
+  <span class="n">trafficSource</span><span class="p">.</span><span class="k">source</span><span class="p">,</span>
+  <span class="n">trafficSource</span><span class="p">.</span><span class="n">medium</span><span class="p">,</span>
+  <span class="n">channelGrouping</span><span class="p">,</span>
+  <span class="n">device</span><span class="p">.</span><span class="n">deviceCategory</span><span class="p">,</span>
+  <span class="n">country</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<p>A new key feature that was added to the training dataset query is the maximum checkout progress each visitor reached in their session, which is recorded in the field <code class="language-plaintext highlighter-rouge">hits.eCommerceAction.action_type</code>. If you search for that field in the <a href="https://support.google.com/analytics/answer/3437719?hl=en">field definitions</a> you will see the field mapping of 6 = Completed Purchase.</p>
+
+<p>The web analytics dataset has nested and repeated fields like <a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/arrays">ARRAYS</a> which need to broken apart into separate rows in your dataset. This is accomplished by using the UNNEST() function, which you can see in the above query.</p>
+
+<p>Evaluate this new model to see if there is better predictive power:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">#</span><span class="n">standardSQL</span>
+<span class="k">SELECT</span>
+  <span class="n">roc_auc</span><span class="p">,</span>
+  <span class="k">CASE</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">9</span> <span class="k">THEN</span> <span class="s1">'good'</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">8</span> <span class="k">THEN</span> <span class="s1">'fair'</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">7</span> <span class="k">THEN</span> <span class="s1">'decent'</span>
+    <span class="k">WHEN</span> <span class="n">roc_auc</span> <span class="o">&gt;</span> <span class="p">.</span><span class="mi">6</span> <span class="k">THEN</span> <span class="s1">'not great'</span>
+  <span class="k">ELSE</span> <span class="s1">'poor'</span> <span class="k">END</span> <span class="k">AS</span> <span class="n">model_quality</span>
+<span class="k">FROM</span>
+  <span class="n">ML</span><span class="p">.</span><span class="n">EVALUATE</span><span class="p">(</span><span class="n">MODEL</span> <span class="n">ecommerce</span><span class="p">.</span><span class="n">classification_model_2</span><span class="p">,</span>  <span class="p">(</span>
+<span class="k">WITH</span> <span class="n">all_visitor_stats</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span>
+  <span class="n">fullvisitorid</span><span class="p">,</span>
+  <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span>
+<span class="p">)</span>
+<span class="o">#</span> <span class="k">add</span> <span class="k">in</span> <span class="k">new</span> <span class="n">features</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">EXCEPT</span><span class="p">(</span><span class="n">unique_session_id</span><span class="p">)</span> <span class="k">FROM</span> <span class="p">(</span>
+  <span class="k">SELECT</span>
+      <span class="n">CONCAT</span><span class="p">(</span><span class="n">fullvisitorid</span><span class="p">,</span> <span class="k">CAST</span><span class="p">(</span><span class="n">visitId</span> <span class="k">AS</span> <span class="n">STRING</span><span class="p">))</span> <span class="k">AS</span> <span class="n">unique_session_id</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">labels</span>
+      <span class="n">will_buy_on_return_visit</span><span class="p">,</span>
+      <span class="k">MAX</span><span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="n">h</span><span class="p">.</span><span class="n">eCommerceAction</span><span class="p">.</span><span class="n">action_type</span> <span class="k">AS</span> <span class="n">INT64</span><span class="p">))</span> <span class="k">AS</span> <span class="n">latest_ecommerce_progress</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">behavior</span> <span class="k">on</span> <span class="n">the</span> <span class="n">site</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">bounces</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">bounces</span><span class="p">,</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">timeOnSite</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">time_on_site</span><span class="p">,</span>
+      <span class="n">totals</span><span class="p">.</span><span class="n">pageviews</span><span class="p">,</span>
+      <span class="o">#</span> <span class="k">where</span> <span class="n">the</span> <span class="n">visitor</span> <span class="n">came</span> <span class="k">from</span>
+      <span class="n">trafficSource</span><span class="p">.</span><span class="k">source</span><span class="p">,</span>
+      <span class="n">trafficSource</span><span class="p">.</span><span class="n">medium</span><span class="p">,</span>
+      <span class="n">channelGrouping</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">mobile</span> <span class="k">or</span> <span class="n">desktop</span>
+      <span class="n">device</span><span class="p">.</span><span class="n">deviceCategory</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">geographic</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">geoNetwork</span><span class="p">.</span><span class="n">country</span><span class="p">,</span> <span class="nv">""</span><span class="p">)</span> <span class="k">AS</span> <span class="n">country</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span><span class="p">,</span>
+     <span class="k">UNNEST</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="k">AS</span> <span class="n">h</span>
+    <span class="k">JOIN</span> <span class="n">all_visitor_stats</span> <span class="k">USING</span><span class="p">(</span><span class="n">fullvisitorid</span><span class="p">)</span>
+  <span class="k">WHERE</span> <span class="mi">1</span><span class="o">=</span><span class="mi">1</span>
+    <span class="o">#</span> <span class="k">only</span> <span class="n">predict</span> <span class="k">for</span> <span class="k">new</span> <span class="n">visits</span>
+    <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="nb">date</span> <span class="k">BETWEEN</span> <span class="s1">'20170501'</span> <span class="k">AND</span> <span class="s1">'20170630'</span> <span class="o">#</span> <span class="n">eval</span> <span class="mi">2</span> <span class="n">months</span>
+  <span class="k">GROUP</span> <span class="k">BY</span>
+  <span class="n">unique_session_id</span><span class="p">,</span>
+  <span class="n">will_buy_on_return_visit</span><span class="p">,</span>
+  <span class="n">bounces</span><span class="p">,</span>
+  <span class="n">time_on_site</span><span class="p">,</span>
+  <span class="n">totals</span><span class="p">.</span><span class="n">pageviews</span><span class="p">,</span>
+  <span class="n">trafficSource</span><span class="p">.</span><span class="k">source</span><span class="p">,</span>
+  <span class="n">trafficSource</span><span class="p">.</span><span class="n">medium</span><span class="p">,</span>
+  <span class="n">channelGrouping</span><span class="p">,</span>
+  <span class="n">device</span><span class="p">.</span><span class="n">deviceCategory</span><span class="p">,</span>
+  <span class="n">country</span>
+<span class="p">)</span>
+<span class="p">));</span>
+</code></pre></div></div>
+
+<p>(Output)</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Row</th>
+      <th>roc_auc</th>
+      <th>model_quality</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>0.9094875124875125</td>
+      <td>good</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>With this new model you now get a <strong>roc_auc</strong> of 0.91 which is significantly better than the first model.</p>
+
+<p>Now that you have a trained model, time to make some <code class="language-plaintext highlighter-rouge">predictions.Predict</code> which new visitors will come back and purchase</p>
+
+<p>Next you will write a query to predict which new visitors will come back and make a purchase.</p>
+
+<p>The prediction query below uses the improved classification model to predict the probability that a first-time visitor to the Google Merchandise Store will make a purchase in a later visit:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span>
+<span class="o">*</span>
+<span class="k">FROM</span>
+  <span class="n">ml</span><span class="p">.</span><span class="n">PREDICT</span><span class="p">(</span><span class="n">MODEL</span> <span class="nv">`ecommerce.classification_model_2`</span><span class="p">,</span>
+   <span class="p">(</span>
+<span class="k">WITH</span> <span class="n">all_visitor_stats</span> <span class="k">AS</span> <span class="p">(</span>
+<span class="k">SELECT</span>
+  <span class="n">fullvisitorid</span><span class="p">,</span>
+  <span class="n">IF</span><span class="p">(</span><span class="n">COUNTIF</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">transactions</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">AND</span> <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="k">IS</span> <span class="k">NULL</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">will_buy_on_return_visit</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span>
+  <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">fullvisitorid</span>
+<span class="p">)</span>
+  <span class="k">SELECT</span>
+      <span class="n">CONCAT</span><span class="p">(</span><span class="n">fullvisitorid</span><span class="p">,</span> <span class="s1">'-'</span><span class="p">,</span><span class="k">CAST</span><span class="p">(</span><span class="n">visitId</span> <span class="k">AS</span> <span class="n">STRING</span><span class="p">))</span> <span class="k">AS</span> <span class="n">unique_session_id</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">labels</span>
+      <span class="n">will_buy_on_return_visit</span><span class="p">,</span>
+      <span class="k">MAX</span><span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="n">h</span><span class="p">.</span><span class="n">eCommerceAction</span><span class="p">.</span><span class="n">action_type</span> <span class="k">AS</span> <span class="n">INT64</span><span class="p">))</span> <span class="k">AS</span> <span class="n">latest_ecommerce_progress</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">behavior</span> <span class="k">on</span> <span class="n">the</span> <span class="n">site</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">bounces</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">bounces</span><span class="p">,</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">totals</span><span class="p">.</span><span class="n">timeOnSite</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">AS</span> <span class="n">time_on_site</span><span class="p">,</span>
+      <span class="n">totals</span><span class="p">.</span><span class="n">pageviews</span><span class="p">,</span>
+      <span class="o">#</span> <span class="k">where</span> <span class="n">the</span> <span class="n">visitor</span> <span class="n">came</span> <span class="k">from</span>
+      <span class="n">trafficSource</span><span class="p">.</span><span class="k">source</span><span class="p">,</span>
+      <span class="n">trafficSource</span><span class="p">.</span><span class="n">medium</span><span class="p">,</span>
+      <span class="n">channelGrouping</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">mobile</span> <span class="k">or</span> <span class="n">desktop</span>
+      <span class="n">device</span><span class="p">.</span><span class="n">deviceCategory</span><span class="p">,</span>
+      <span class="o">#</span> <span class="n">geographic</span>
+      <span class="n">IFNULL</span><span class="p">(</span><span class="n">geoNetwork</span><span class="p">.</span><span class="n">country</span><span class="p">,</span> <span class="nv">""</span><span class="p">)</span> <span class="k">AS</span> <span class="n">country</span>
+  <span class="k">FROM</span> <span class="nv">`data-to-insights.ecommerce.web_analytics`</span><span class="p">,</span>
+     <span class="k">UNNEST</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="k">AS</span> <span class="n">h</span>
+    <span class="k">JOIN</span> <span class="n">all_visitor_stats</span> <span class="k">USING</span><span class="p">(</span><span class="n">fullvisitorid</span><span class="p">)</span>
+  <span class="k">WHERE</span>
+    <span class="o">#</span> <span class="k">only</span> <span class="n">predict</span> <span class="k">for</span> <span class="k">new</span> <span class="n">visits</span>
+    <span class="n">totals</span><span class="p">.</span><span class="n">newVisits</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">AND</span> <span class="nb">date</span> <span class="k">BETWEEN</span> <span class="s1">'20170701'</span> <span class="k">AND</span> <span class="s1">'20170801'</span> <span class="o">#</span> <span class="n">test</span> <span class="mi">1</span> <span class="k">month</span>
+  <span class="k">GROUP</span> <span class="k">BY</span>
+  <span class="n">unique_session_id</span><span class="p">,</span>
+  <span class="n">will_buy_on_return_visit</span><span class="p">,</span>
+  <span class="n">bounces</span><span class="p">,</span>
+  <span class="n">time_on_site</span><span class="p">,</span>
+  <span class="n">totals</span><span class="p">.</span><span class="n">pageviews</span><span class="p">,</span>
+  <span class="n">trafficSource</span><span class="p">.</span><span class="k">source</span><span class="p">,</span>
+  <span class="n">trafficSource</span><span class="p">.</span><span class="n">medium</span><span class="p">,</span>
+  <span class="n">channelGrouping</span><span class="p">,</span>
+  <span class="n">device</span><span class="p">.</span><span class="n">deviceCategory</span><span class="p">,</span>
+  <span class="n">country</span>
+<span class="p">)</span>
+<span class="p">)</span>
+<span class="k">ORDER</span> <span class="k">BY</span>
+  <span class="n">predicted_will_buy_on_return_visit</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>The predictions are made on the last 1 month (out of 12 months) of the dataset.Your model now outputs its predictions for those July 2017 ecommerce sessions. You can see three newly added fields:</p>
+
+<ul>
+  <li>predicted_will_buy_on_return_visit: whether the model thinks the visitor will buy later (1 = yes)</li>
+  <li>predicted_will_buy_on_return_visit_probs.label: the binary classifier for yes / no</li>
+  <li>predicted_will_buy_on_return_visit.probs.prob: the confidence the model has in it’s prediction (1 = 100%)</li>
+</ul>
+
+<p><img src="https://cdn.qwiklabs.com/fEttKDSQAqoD3sZWAo04MVkXGfM%2ByRDnOQST%2FaCRZwg%3D" alt="710c0c0b9abf827b.png"></p>
+
+<h2 id="results">
+<a class="anchor" href="#results" aria-hidden="true"><span class="octicon octicon-link"></span></a>Results</h2>
+
+<ul>
+  <li>Of the top 6% of first-time visitors (sorted in decreasing order of predicted probability), more than 6% make a purchase in a later visit.</li>
+  <li>These users represent nearly 50% of all first-time visitors who make a purchase in a later visit.</li>
+  <li>Overall, only 0.7% of first-time visitors make a purchase in a later visit.</li>
+  <li>Targeting the top 6% of first-time increases marketing ROI by 9x vs targeting them all!</li>
+</ul>
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="qiaohuang/jupyter-notebooks"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/sql/machine%20learning/2021/10/23/bqml-prediction.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p></p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/qiaohuang" title="qiaohuang"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/qiaohuang_" title="qiaohuang_"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
